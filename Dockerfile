@@ -23,5 +23,6 @@ COPY --from=install /app/node_modules ./node_modules
 COPY src ./src
 COPY package.json ./
 
+EXPOSE 3000
 USER bun
 ENTRYPOINT ["bun", "run", "src/index.ts"]

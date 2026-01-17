@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { z } from "zod";
 import { getVideos } from "./api/youtube";
 import { getTranscript } from "./api/transcript";
@@ -91,10 +91,38 @@ server.tool(
   }
 );
 
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("YouTube MCP Server running on stdio");
-}
+const port = parseInt(process.env.PORT || "3000", 10);
+const transports = new Map<string, SSEServerTransport>();
 
-main().catch(console.error);
+Bun.serve({
+  port,
+  async fetch(req) {
+    const url = new URL(req.url);
+
+    if (url.pathname === "/health") {
+      return new Response("OK", { status: 200 });
+    }
+
+    if (url.pathname === "/sse") {
+      const sessionId = crypto.randomUUID();
+      const transport = new SSEServerTransport(`/messages/${sessionId}`, new Response());
+      transports.set(sessionId, transport);
+      server.connect(transport);
+      return transport.sseResponse;
+    }
+
+    if (url.pathname.startsWith("/messages/")) {
+      const sessionId = url.pathname.split("/")[2];
+      const transport = transports.get(sessionId);
+      if (!transport) {
+        return new Response("Session not found", { status: 404 });
+      }
+      await transport.handlePostMessage(req, await req.text());
+      return new Response("OK", { status: 200 });
+    }
+
+    return new Response("Not Found", { status: 404 });
+  },
+});
+
+console.log(`YouTube MCP Server running on http://localhost:${port}/sse`);
