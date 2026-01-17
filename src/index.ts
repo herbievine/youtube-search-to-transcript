@@ -118,4 +118,6 @@ const httpServer = Bun.serve({
 	},
 });
 
-console.log(`YouTube MCP Server running on http://localhost:${httpServer.port}/mcp`);
+console.log(
+	`YouTube MCP Server running on http://localhost:${httpServer.port}/mcp`,
+);
