@@ -112,6 +112,11 @@ const httpServer = Bun.serve({
 	routes: {
 		"/health": () => Response.json({ status: "ok" }),
 		"/mcp": (req) => transport.handleRequest(req),
+		"/api/transcript/:videoId": async (req) => {
+      const transcript = await getTranscript(req.params.videoId)
+
+      return Response.json(transcript)
+		}
 	},
 	fetch() {
 		return Response.json({ message: "Not found" }, { status: 404 });
