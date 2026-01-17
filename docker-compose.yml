@@ -5,3 +5,9 @@ services:
       - "3000:3000"
     environment:
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+    depends_on:
+      - pot-provider
+
+  pot-provider:
+    image: brainicism/bgutil-ytdlp-pot-provider
+    restart: unless-stopped
