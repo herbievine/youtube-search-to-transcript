@@ -102,7 +102,7 @@ server.tool(
 const port = parseInt(process.env.PORT || "3000", 10);
 
 const transport = new WebStandardStreamableHTTPServerTransport({
-	sessionIdGenerator: () => crypto.randomUUID(),
+	sessionIdGenerator: undefined, // Stateless mode for Open WebUI compatibility
 });
 
 await server.connect(transport);
