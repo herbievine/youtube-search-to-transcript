@@ -1,16 +1,15 @@
 FROM oven/bun:1 AS base
 
-# Install yt-dlp, deno (for yt-dlp JS runtime), and dependencies
+# Install yt-dlp via pip (so plugins work), deno, and dependencies
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
+    python3-venv \
     ffmpeg \
     curl \
     unzip \
-    && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
-    && chmod a+rx /usr/local/bin/yt-dlp \
     && curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh \
-    && pip3 install --break-system-packages bgutil-ytdlp-pot-provider \
+    && pip3 install --break-system-packages yt-dlp bgutil-ytdlp-pot-provider \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
