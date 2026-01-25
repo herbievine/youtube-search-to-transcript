@@ -99,7 +99,7 @@ server.tool(
 	},
 );
 
-const port = parseInt(process.env.PORT || "3000", 10);
+const port = parseInt(Bun.env.PORT || "3000", 10);
 
 const transport = new WebStandardStreamableHTTPServerTransport({
 	sessionIdGenerator: undefined, // Stateless mode for Open WebUI compatibility

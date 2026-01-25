@@ -9,10 +9,7 @@ export async function getTranscript(videoId: string): Promise<string> {
 	const vttPath = `${outputPath}.en.vtt`;
 
 	try {
-		// Use yt-dlp with PO token provider for bot bypass
-		const potProviderUrl = process.env.POT_PROVIDER_URL || "http://pot-provider:4416";
-
-		await $`yt-dlp --extractor-args youtubepot-bgutilhttp:base_url=${potProviderUrl} --write-auto-sub --sub-lang en --skip-download --sub-format vtt -o ${outputPath} https://www.youtube.com/watch?v=${videoId}`.quiet();
+		await $`yt-dlp --cookies ${Bun.env.COOKIE_TXT_PATH} --write-auto-sub --sub-lang en --skip-download --sub-format vtt -o ${outputPath} https://www.youtube.com/watch?v=${videoId}`.quiet();
 
 		// Read and parse the VTT file
 		const vttContent = await Bun.file(vttPath).text();
