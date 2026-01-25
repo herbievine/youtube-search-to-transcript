@@ -12,21 +12,19 @@ const youtube = google.youtube({
 	auth: YOUTUBE_API_KEY,
 });
 
-type GetVideosParams = {
-	query: string;
-	maxResults: number;
-	order: "relevance" | "date" | "rating" | "title" | "videoCount" | "viewCount";
-	publishedBefore: string | undefined;
-	publishedAfter: string | undefined;
-};
-
 export async function getVideos({
 	query,
 	maxResults,
 	order,
 	publishedBefore,
 	publishedAfter,
-}: GetVideosParams) {
+}: {
+	query: string;
+	maxResults: number;
+	order: "relevance" | "date" | "rating" | "title" | "videoCount" | "viewCount";
+	publishedBefore: string | undefined;
+	publishedAfter: string | undefined;
+}) {
 	try {
 		const response = await youtube.search.list({
 			part: ["snippet"],
@@ -54,6 +52,101 @@ export async function getVideos({
 
 		return videos;
 	} catch {
+		return [];
+	}
+}
+
+export async function searchChannels({
+	query,
+	maxResults,
+	order,
+}: {
+	query: string;
+	maxResults: number;
+	order: "relevance" | "date" | "rating" | "title" | "videoCount" | "viewCount";
+}) {
+	try {
+		const response = await youtube.search.list({
+			part: ["snippet"],
+			q: query,
+			type: ["channel"],
+			maxResults,
+			order,
+		});
+
+		if (response.status !== 200 || !response.data.items) {
+			console.error("Failed to search channels:", response.statusText);
+			return [];
+		}
+
+		return response.data.items.map((item) => ({
+			channelId: item.id?.channelId ?? null,
+			title: item.snippet?.title ?? null,
+			description: item.snippet?.description ?? null,
+			publishedAt: item.snippet?.publishedAt ?? null,
+			thumbnailUrl: item.snippet?.thumbnails?.high?.url ?? null,
+		}));
+	} catch (err) {
+		console.error("Error in searchChannels:", err);
+		return [];
+	}
+}
+
+export async function getLatestVideosByChannel({
+	channelId,
+	maxResults,
+}: {
+	channelId: string;
+	maxResults: number;
+}) {
+	try {
+		const channelResp = await youtube.channels.list({
+			part: ["contentDetails", "snippet"],
+			id: [channelId],
+		});
+
+		if (
+			channelResp.status !== 200 ||
+			!channelResp.data.items ||
+			!channelResp.data.items[0]
+		) {
+			console.error("Channel not found or API error:", channelResp.statusText);
+			return [];
+		}
+
+		const channel = channelResp.data.items[0];
+		const uploadsPlaylistId = channel.contentDetails?.relatedPlaylists?.uploads;
+
+		if (!uploadsPlaylistId) {
+			console.error("No uploads playlist found for channel:", channelId);
+			return [];
+		}
+
+		const playlistResp = await youtube.playlistItems.list({
+			part: ["snippet", "contentDetails"],
+			playlistId: uploadsPlaylistId,
+			maxResults,
+		});
+
+		if (playlistResp.status !== 200 || !playlistResp.data.items) {
+			console.error("Failed to fetch playlist items:", playlistResp.statusText);
+			return [];
+		}
+
+		return playlistResp.data.items.map((item) => ({
+			videoId: item.contentDetails?.videoId ?? null,
+			title: item.snippet?.title ?? null,
+			description: item.snippet?.description ?? null,
+			publishedAt:
+				item.contentDetails?.videoPublishedAt ??
+				item.snippet?.publishedAt ??
+				null,
+			channelTitle: item.snippet?.channelTitle ?? null,
+			channelId: item.snippet?.channelId ?? channelId,
+			thumbnailUrl: item.snippet?.thumbnails?.high?.url ?? null,
+		}));
+	} catch (err) {
+		console.error("Error in getLatestVideosByChannel:", err);
 		return [];
 	}
 }
