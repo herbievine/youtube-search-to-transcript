@@ -113,16 +113,17 @@ const httpServer = Bun.serve({
 		"/health": () => Response.json({ status: "ok" }),
 		"/mcp": (req) => transport.handleRequest(req),
 		"/api/transcript/:videoId": async (req) => {
-      try {
-        const transcript = await getTranscript(req.params.videoId)
+			try {
+				const transcript = await getTranscript(req.params.videoId);
 
-        return Response.json(transcript)
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown error";
+				return Response.json(transcript);
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : "Unknown error";
 
-        return Response.json({ error: message }, { status: 500 });
-  		}
-		}
+				return Response.json({ error: message }, { status: 500 });
+			}
+		},
 	},
 	fetch() {
 		return Response.json({ message: "Not found" }, { status: 404 });

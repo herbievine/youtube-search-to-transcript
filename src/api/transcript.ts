@@ -9,7 +9,16 @@ export async function getTranscript(videoId: string): Promise<string> {
 	const vttPath = `${outputPath}.en.vtt`;
 
 	try {
-		await $`yt-dlp --cookies ${Bun.env.COOKIE_TXT_PATH} --write-auto-sub --sub-lang en --skip-download --sub-format vtt -o ${outputPath} https://www.youtube.com/watch?v=${videoId}`.quiet();
+		await $`yt-dlp \
+      --cookies ${Bun.env.COOKIE_TXT_PATH} \
+      --write-auto-sub \
+      --sub-lang en \
+      --sub-format vtt \
+      --skip-download \
+      --ignore-no-formats-error \
+      --no-check-formats \
+      -o ${outputPath} \
+      https://www.youtube.com/watch?v=${videoId}`.quiet();
 
 		// Read and parse the VTT file
 		const vttContent = await Bun.file(vttPath).text();
